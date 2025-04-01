@@ -1,25 +1,37 @@
-# go-musthave-diploma-tpl
+# Loyality Score System ("Gophermart")
 
-Шаблон репозитория для индивидуального дипломного проекта курса «Go-разработчик»
+Project for learning golang on Yandex-practicum .
 
-# Начало работы
+### Get started
 
-1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере.
-2. В корне репозитория выполните команду `go mod init <name>` (где `<name>` — адрес вашего репозитория на GitHub без
-   префикса `https://`) для создания модуля
 
-# Обновление шаблона
+0. Start PostgreSQL database
 
-Чтобы иметь возможность получать обновления автотестов и других частей шаблона, выполните команду:
-
-```
-git remote add -m master template https://github.com/yandex-praktikum/go-musthave-diploma-tpl.git
+```bash
+docker run -d --name metrics-collector-pg -p 5433:5432 -e POSTGRES_PASSWORD=metrics -e POSTGRES_USER=metrics -e POSTGRES_DB=metrics postgres
 ```
 
-Для обновления кода автотестов выполните команду:
+1. Install [goose](https://github.com/pressly/goose?tab=readme-ov-file#up)
 
-```
-git fetch template && git checkout template/master .github
+(For MacOs):
+```bash
+brew install goose
 ```
 
-Затем добавьте полученные изменения в свой репозиторий.
+2. Run migrations
+
+UP:
+```bash
+goose -dir internal/db/migrations postgres "postgres://metrics:metrics@localhost:5433/metrics?sslmode=disable" up 
+```
+
+Down:
+```bash
+goose -dir internal/db/migrations postgres "postgres://metrics:metrics@localhost:5433/metrics?sslmode=disable" down 
+```
+
+3. Run server
+
+```bash
+go run ./cmd/gophermart -d="postgres://metrics:metrics@localhost:5433/metrics?sslmode=disable" -m=false
+```
