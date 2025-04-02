@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// TODO: вынести в переменные окружения
 var jwtSecretKey = []byte("your-secret-key")
 
 type Claims struct {
@@ -37,19 +38,6 @@ func GenerateRefreshToken(userID string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecretKey)
-}
-
-// TODO: реализовать refresh-хендлер
-func RefreshAccessToken(refreshToken string) (string, error) {
-	claims, err := ParseJWT(refreshToken)
-	if err != nil {
-		return "", fmt.Errorf("невалидный refresh токен: %v", err)
-	}
-	if claims.ExpiresAt.Time.Before(time.Now()) {
-		return "", fmt.Errorf("refresh токен истек")
-	}
-
-	return GenerateAccessToken(claims.UserID)
 }
 
 func ParseJWT(tokenString string) (*Claims, error) {

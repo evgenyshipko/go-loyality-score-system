@@ -1,4 +1,4 @@
-# Loyality Score System ("Gophermart")
+# CChat helper for business
 
 Project for learning golang on Yandex-practicum .
 

@@ -8,11 +8,15 @@ import (
 func (s *CustomServer) initRoutes() *chi.Mux {
 	apiRouter := chi.NewRouter()
 
-	apiRouter.With(middlewares.AuthMiddleware).Get("/", s.HelloWordHandler)
+	apiRouter.With(middlewares.Auth).Get("/", s.HelloWordHandler)
 
-	apiRouter.Post("/user/register", s.RegisterHandler)
+	apiRouter.With(middlewares.Auth).Post("/user/logout", s.LogoutHandler)
 
-	apiRouter.Post("/user/login", s.LoginHandler)
+	apiRouter.With(middlewares.CheckCredentials).Post("/user/register", s.RegisterHandler)
+
+	apiRouter.With(middlewares.CheckCredentials).Post("/user/login", s.LoginHandler)
+
+	apiRouter.Post("/user/refresh", s.RefreshHandler)
 
 	return apiRouter
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/evgenyshipko/go-loyality-score-system/internal/db"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/httpserver"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/middlewares"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/middlewares/logging"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/services"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/storage"
@@ -47,10 +46,6 @@ func Create() *CustomServer {
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
-
-	router.Use(middlewares.GzipDecompress)
-
-	router.Use(middlewares.GzipCompress)
 
 	router.Use(logging.LoggingHandlers)
 

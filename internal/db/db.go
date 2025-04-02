@@ -15,6 +15,7 @@ func ConnectToDB(serverDSN string, autoMigrations bool) (*sql.DB, error) {
 		return nil, err
 	}
 
+	//TODO: убрать автомиграции, оставить только ручные
 	if autoMigrations {
 		err = RunMigrations(db)
 		if err != nil {

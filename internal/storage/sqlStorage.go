@@ -115,5 +115,21 @@ func (storage *SQLStorage) SaveUserTokens(userId string, access string, refresh 
 		return err
 	}
 	return nil
+}
 
+func (storage *SQLStorage) DropUserTokens(userId string) error {
+	logger.Instance.Info("DropUserTokens")
+
+	query := `DELETE FROM sessions WHERE user_id = $1;`
+
+	stmt, err := storage.prepareStmt(query)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(userId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -1,17 +1,14 @@
 package server
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"fmt"
+	c "github.com/evgenyshipko/go-loyality-score-system/internal/const"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
 	"github.com/evgenyshipko/go-loyality-score-system/internal/storage"
-	"github.com/go-playground/validator"
+	"github.com/evgenyshipko/go-loyality-score-system/internal/tokens"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx"
 	"net/http"
-	"time"
 )
 
 func (s *CustomServer) HelloWordHandler(res http.ResponseWriter, req *http.Request) {
@@ -19,41 +16,16 @@ func (s *CustomServer) HelloWordHandler(res http.ResponseWriter, req *http.Reque
 	res.Write([]byte("<h1>Hello World</h1>"))
 }
 
-type RegisterRequest struct {
-	Login    string `json:"login" validate:"required"`
-	Password string `json:"password" validate:"required"`
-}
-
-func validateBody[T any](req *http.Request, data *T) error {
-	var buf bytes.Buffer
-	_, err := buf.ReadFrom(req.Body)
-	if err != nil {
-		return err
-	}
-	if err = json.Unmarshal(buf.Bytes(), data); err != nil {
-		return err
-	}
-
-	validate := validator.New() // создаём валидатор
-
-	if err := validate.Struct(data); err != nil {
-		return errors.New(fmt.Sprintf("Не заполнены поля: %s", err))
-	}
-
-	return nil
-}
-
 func (s *CustomServer) RegisterHandler(res http.ResponseWriter, req *http.Request) {
 
-	var data RegisterRequest
-	err := validateBody(req, &data)
+	data, err := getCredentialsFromContext(req.Context())
 	if err != nil {
-		logger.Instance.Warnw(err.Error())
-		http.Error(res, "Не передан логин или пароль", http.StatusBadRequest)
+		logger.Instance.Warnw("getCredentialsFromContext", "err", err.Error())
+		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	err = s.services.Auth.Register(data.Login, data.Password)
+	userId, err := s.services.Auth.Register(data.Login, data.Password)
 	if err != nil {
 		logger.Instance.Warnw("Ошибка Auth.Register", "err", err.Error())
 
@@ -66,19 +38,18 @@ func (s *CustomServer) RegisterHandler(res http.ResponseWriter, req *http.Reques
 		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	s.registerTokens(data.Login, res)
+	s.registerTokens(userId, res)
 }
 
 func (s *CustomServer) LoginHandler(res http.ResponseWriter, req *http.Request) {
-	var data RegisterRequest
-	err := validateBody(req, &data)
+	data, err := getCredentialsFromContext(req.Context())
 	if err != nil {
-		logger.Instance.Warnw(err.Error())
-		http.Error(res, "Не передан логин или пароль", http.StatusBadRequest)
+		logger.Instance.Warnw("getCredentialsFromContext", "err", err.Error())
+		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	success, err := s.services.Auth.Login(data.Login, data.Password)
+	success, userId, err := s.services.Auth.Login(data.Login, data.Password)
 	if err != nil {
 		logger.Instance.Warnw("Ошибка Auth.Login", "err", err.Error())
 
@@ -96,33 +67,33 @@ func (s *CustomServer) LoginHandler(res http.ResponseWriter, req *http.Request) 
 		http.Error(res, "Неправильное имя пользователя или пароль", http.StatusUnauthorized)
 		return
 	}
-	s.registerTokens(data.Login, res)
+	s.registerTokens(userId, res)
 }
 
-func (s *CustomServer) registerTokens(login string, res http.ResponseWriter) {
-	access, refresh, err := s.services.Auth.GenerateTokensAndSave(login)
+func (s *CustomServer) LogoutHandler(res http.ResponseWriter, req *http.Request) {
+	userId := req.Context().Value(c.UserId).(string)
+	err := s.storage.DropUserTokens(userId)
 	if err != nil {
-		logger.Instance.Warnw("Ошибка Auth.GenerateTokensAndSave", "err", err.Error())
-
+		logger.Instance.Warnw("storage.DropUserTokens", "err", err)
 		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	clearCookies(res, []c.CookieName{c.AccessToken, c.RefreshToken})
+}
 
-	http.SetCookie(res, &http.Cookie{
-		Name:     "access_token",
-		Value:    access,
-		Expires:  time.Now().Add(15 * time.Minute),
-		HttpOnly: true,
-		Secure:   true,
-		Path:     "/",
-	})
+func (s *CustomServer) RefreshHandler(res http.ResponseWriter, req *http.Request) {
 
-	http.SetCookie(res, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refresh,
-		Expires:  time.Now().Add(7 * 24 * time.Hour),
-		HttpOnly: true,
-		Secure:   true,
-		Path:     "/",
-	})
+	cookie, err := req.Cookie(string(c.RefreshToken))
+	if err != nil {
+		http.Error(res, "Требуется авторизация", http.StatusUnauthorized)
+		return
+	}
+
+	claims, err := tokens.ParseJWT(cookie.Value)
+	if err != nil {
+		http.Error(res, "Неверный токен", http.StatusUnauthorized)
+		return
+	}
+
+	s.registerTokens(claims.UserID, res)
 }
