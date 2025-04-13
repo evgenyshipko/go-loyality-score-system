@@ -42,6 +42,22 @@ func (service *DocumentService) UploadDocument(buffer *bytes.Buffer) error {
 	return nil
 }
 
+func (service *DocumentService) SearchDocument(keywords []string) (string, error) {
+	chunks, err := service.storage.SearchChunks(keywords)
+	if err != nil {
+		return "", err
+	}
+	// TODO: это первая версия - берем все чанки и возвращаем их. Для больших документов надо изобретать более сложную логику
+	res := ""
+	for _, chunk := range chunks {
+		res += chunk.Text
+	}
+
+	logger.Instance.Infow("SearchDocument", "res", res)
+
+	return res, nil
+}
+
 func splitDocumentIntoChunks(document string) []c.DocumentChunk {
 	var chunks []c.DocumentChunk
 	words := strings.Fields(document)

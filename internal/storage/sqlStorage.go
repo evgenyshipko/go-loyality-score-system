@@ -139,13 +139,18 @@ func (storage *SQLStorage) DropUserTokens(userId string) error {
 type Chunk struct {
 	Rank float64
 	Text string
+	Id   int
 }
 
 func (storage *SQLStorage) SearchChunks(keywords []string) ([]Chunk, error) {
+	var parts []string
+	for _, kw := range keywords {
+		cleaned := strings.Join(strings.Fields(kw), " & ")
+		parts = append(parts, cleaned)
+	}
+	tsquery := strings.Join(parts, " | ")
 
-	tsquery := strings.Join(keywords, " | ")
-
-	query := `SELECT ts_rank(text_tsvector, to_tsquery('russian', $1)) AS rank, text
+	query := `SELECT ts_rank(text_tsvector, to_tsquery('russian', $1)) AS rank, text, id
 	FROM doc_chunks
 	WHERE text_tsvector @@ to_tsquery('russian', $1)
 	ORDER BY rank DESC`
@@ -164,7 +169,7 @@ func (storage *SQLStorage) SearchChunks(keywords []string) ([]Chunk, error) {
 	var results []Chunk
 	for rows.Next() {
 		var chunk Chunk
-		if err := rows.Scan(&chunk.Rank, &chunk.Text); err != nil {
+		if err := rows.Scan(&chunk.Rank, &chunk.Text, &chunk.Id); err != nil {
 			return nil, fmt.Errorf("row scanning failed: %w", err)
 		}
 		results = append(results, chunk)

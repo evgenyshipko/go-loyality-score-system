@@ -20,5 +20,7 @@ func (s *CustomServer) initRoutes() *chi.Mux {
 
 	apiRouter.With(middlewares.Auth).Post("/upload", s.UploadHandler)
 
+	apiRouter.With(middlewares.Auth).Get("/ask", s.AnswerHandler)
+
 	return apiRouter
 }

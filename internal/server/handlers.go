@@ -88,7 +88,7 @@ func (s *CustomServer) RefreshHandler(res http.ResponseWriter, req *http.Request
 
 	cookie, err := req.Cookie(string(c.RefreshToken))
 	if err != nil {
-		http.Error(res, "Требуется авторизация", http.StatusUnauthorized)
+		http.Error(res, "Отсутствует рефреш-токен", http.StatusUnauthorized)
 		return
 	}
 
@@ -131,4 +131,39 @@ func (s *CustomServer) UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("Чанки загружены успешно!"))
+}
+
+func (s *CustomServer) AnswerHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("query")
+	if query == "" {
+		logger.Instance.Warnw("chi.URLParam", "err", "query is empty")
+		http.Error(w, "необходимо передать запрос в параметре query", http.StatusBadRequest)
+		return
+	}
+
+	keywords, err := s.services.Llm.GetKeywords(query)
+	if err != nil {
+		logger.Instance.Warnw("Llm.GetKeywords", "err", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	document, err := s.services.Document.SearchDocument(keywords)
+	if document == "" {
+		w.Write([]byte("Извините, я не знаю ответа на данный вопрос. Могу отвечать только на вопросы по компании."))
+		return
+	}
+
+	if err != nil {
+		logger.Instance.Warnw("searchDocument", "err", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	answer, err := s.services.Llm.GetAnswerBasedOnDocument(query, document)
+	if err != nil {
+		logger.Instance.Warnw("llm.GetAnswerBasedOnDocument", "err", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(answer))
 }
