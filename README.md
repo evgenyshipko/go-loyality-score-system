@@ -1,6 +1,8 @@
-# Chat helper for business (based on RAG)
+# Chat helper for business (based on [RAG](https://habr.com/ru/articles/779526/))
 
-Project for learning golang on Yandex-practicum. [Technical requirements](https://docs.google.com/document/d/1jaTT-PtvjUUaQoy0HK6dxhJ1OUSWX7NcRoQiCHpzRPk/edit?usp=sharing).
+## [YOUTUBE PRESENTATION](https://youtu.be/WwrNv7uGQdQ)
+
+Project for learning golang on Yandex-practicum, based on [technical requirements](https://docs.google.com/document/d/1jaTT-PtvjUUaQoy0HK6dxhJ1OUSWX7NcRoQiCHpzRPk/edit?usp=sharing).
 
 ### Get started
 
