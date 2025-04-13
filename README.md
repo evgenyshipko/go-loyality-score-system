@@ -1,11 +1,10 @@
-# CChat helper for business
+# Chat helper for business (based on RAG)
 
-Project for learning golang on Yandex-practicum .
+Project for learning golang on Yandex-practicum. [Technical requirements](https://docs.google.com/document/d/1jaTT-PtvjUUaQoy0HK6dxhJ1OUSWX7NcRoQiCHpzRPk/edit?usp=sharing).
 
 ### Get started
 
-
-0. Start PostgreSQL database
+0. Start local PostgreSQL database in docker container
 
 ```bash
 docker run -d --name metrics-collector-pg -p 5433:5432 -e POSTGRES_PASSWORD=metrics -e POSTGRES_USER=metrics -e POSTGRES_DB=metrics postgres
@@ -30,8 +29,10 @@ Down:
 goose -dir internal/db/migrations postgres "postgres://metrics:metrics@localhost:5433/metrics?sslmode=disable" down 
 ```
 
-3. Run server
+3. Create .env file in your project root directory. Environment example you can see in .env.sample
+
+4. Run server
 
 ```bash
-go run ./cmd/gophermart -d="postgres://metrics:metrics@localhost:5433/metrics?sslmode=disable" -m=false
+go run ./cmd
 ```

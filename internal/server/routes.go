@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/evgenyshipko/go-loyality-score-system/internal/middlewares"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/middlewares"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -17,6 +17,8 @@ func (s *CustomServer) initRoutes() *chi.Mux {
 	apiRouter.With(middlewares.CheckCredentials).Post("/user/login", s.LoginHandler)
 
 	apiRouter.Post("/user/refresh", s.RefreshHandler)
+
+	apiRouter.With(middlewares.Auth).Post("/upload", s.UploadHandler)
 
 	return apiRouter
 }

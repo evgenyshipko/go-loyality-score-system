@@ -2,7 +2,7 @@ package httpserver
 
 import (
 	"context"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
 	"net/http"
 	"time"
 )

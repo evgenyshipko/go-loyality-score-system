@@ -1,13 +1,16 @@
 package server
 
 import (
+	"bytes"
 	"errors"
-	c "github.com/evgenyshipko/go-loyality-score-system/internal/const"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/storage"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/tokens"
+	"fmt"
+	c "github.com/evgenyshipko/go-rag-chat-helper/internal/const"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/storage"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/tokens"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx"
+	"io"
 	"net/http"
 )
 
@@ -96,4 +99,36 @@ func (s *CustomServer) RefreshHandler(res http.ResponseWriter, req *http.Request
 	}
 
 	s.registerTokens(claims.UserID, res)
+}
+
+func (s *CustomServer) UploadHandler(w http.ResponseWriter, r *http.Request) {
+	//Ограничиваем размер загружаемого файла до 10 МБ
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка при ParseMultipartForm: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка при получении файла: %v", err), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, file)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Ошибка при чтении файла: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = s.services.Document.UploadDocument(buf)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("Чанки загружены успешно!"))
 }

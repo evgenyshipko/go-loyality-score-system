@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/storage"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/tokens"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/storage"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/tokens"
 	"golang.org/x/crypto/bcrypt"
 )
 

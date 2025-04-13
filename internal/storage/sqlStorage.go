@@ -3,7 +3,9 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
+	c "github.com/evgenyshipko/go-rag-chat-helper/internal/const"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
+	"strings"
 	"sync"
 	"time"
 )
@@ -131,5 +133,77 @@ func (storage *SQLStorage) DropUserTokens(userId string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+type Chunk struct {
+	Rank float64
+	Text string
+}
+
+func (storage *SQLStorage) SearchChunks(keywords []string) ([]Chunk, error) {
+
+	tsquery := strings.Join(keywords, " | ")
+
+	query := `SELECT ts_rank(text_tsvector, to_tsquery('russian', $1)) AS rank, text
+	FROM doc_chunks
+	WHERE text_tsvector @@ to_tsquery('russian', $1)
+	ORDER BY rank DESC`
+
+	stmt, err := storage.prepareStmt(query)
+	if err != nil {
+		return make([]Chunk, 0), err
+	}
+
+	rows, err := stmt.Query(tsquery)
+	if err != nil {
+		return nil, fmt.Errorf("query execution failed: %w", err)
+	}
+	defer rows.Close()
+
+	var results []Chunk
+	for rows.Next() {
+		var chunk Chunk
+		if err := rows.Scan(&chunk.Rank, &chunk.Text); err != nil {
+			return nil, fmt.Errorf("row scanning failed: %w", err)
+		}
+		results = append(results, chunk)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return results, nil
+}
+
+func (storage *SQLStorage) SaveChunks(chunks []c.DocumentChunk) error {
+	tx, err := storage.db.Begin()
+	if err != nil {
+		return fmt.Errorf("ошибка при начале транзакции: %w", err)
+	}
+
+	stmt, err := tx.Prepare(`
+        INSERT INTO doc_chunks (text, text_tsvector)
+        VALUES ($1, to_tsvector('russian', $1))
+    `)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("ошибка при подготовке запроса: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, chunk := range chunks {
+		_, err := stmt.Exec(chunk.Text)
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("ошибка при вставке чанка: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("ошибка при фиксации транзакции: %w", err)
+	}
+
 	return nil
 }

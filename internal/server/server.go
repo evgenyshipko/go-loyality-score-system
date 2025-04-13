@@ -1,14 +1,15 @@
 package server
 
 import (
-	"github.com/evgenyshipko/go-loyality-score-system/internal/db"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/httpserver"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/middlewares/logging"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/services"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/storage"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/db"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/httpserver"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/middlewares/logging"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/services"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"os"
 )
 
 type CustomServer struct {
@@ -18,9 +19,7 @@ type CustomServer struct {
 }
 
 func NewCustomServer(router *chi.Mux) *CustomServer {
-
-	// TODO: вынести serverDSN в переменные окружения
-	database, err := db.ConnectToDB("postgres://metrics:metrics@localhost:5433/metrics?sslmode=disable&connect_timeout=5", true)
+	database, err := db.ConnectToDB(os.Getenv("POSTGRES_CONNECT"))
 	if err != nil {
 		panic(err)
 	}
@@ -29,8 +28,7 @@ func NewCustomServer(router *chi.Mux) *CustomServer {
 	service := services.NewServices(store)
 
 	s := &CustomServer{
-		// TODO: вынести host в переменные окружения
-		server:   httpserver.NewHTTPServer("localhost:8080", router),
+		server:   httpserver.NewHTTPServer(os.Getenv("SERVER_HOST"), router),
 		storage:  store,
 		services: service,
 	}

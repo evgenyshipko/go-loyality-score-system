@@ -14,3 +14,13 @@ type CookieName string
 
 const AccessToken CookieName = "access_token"
 const RefreshToken CookieName = "refresh_token"
+
+type LlmRoles string
+
+const User LlmRoles = "user"
+const System LlmRoles = "system"
+
+type DocumentChunk struct {
+	Text       string
+	ChunkIndex int
+}

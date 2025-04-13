@@ -1,8 +1,8 @@
 package logging
 
 import (
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/middlewares/utils"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/middlewares/utils"
 	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"time"

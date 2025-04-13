@@ -3,11 +3,11 @@ package tokens
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"os"
 	"time"
 )
 
-// TODO: вынести в переменные окружения
-var jwtSecretKey = []byte("your-secret-key")
+var jwtSecretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 
 type Claims struct {
 	UserID string `json:"user_id"`
@@ -42,7 +42,6 @@ func GenerateRefreshToken(userID string) (string, error) {
 
 func ParseJWT(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		// Проверяем, что метод подписи токена правильный
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("неверный метод подписи")
 		}

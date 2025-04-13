@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"context"
-	c "github.com/evgenyshipko/go-loyality-score-system/internal/const"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/tokens"
+	c "github.com/evgenyshipko/go-rag-chat-helper/internal/const"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/tokens"
 	"net/http"
 )
 

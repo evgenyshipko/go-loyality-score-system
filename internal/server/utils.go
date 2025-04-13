@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"errors"
-	c "github.com/evgenyshipko/go-loyality-score-system/internal/const"
-	"github.com/evgenyshipko/go-loyality-score-system/internal/logger"
+	c "github.com/evgenyshipko/go-rag-chat-helper/internal/const"
+	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
 	"net/http"
 	"time"
 )
