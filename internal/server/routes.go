@@ -8,7 +8,7 @@ import (
 func (s *CustomServer) initRoutes() *chi.Mux {
 	apiRouter := chi.NewRouter()
 
-	apiRouter.With(middlewares.Auth).Get("/", s.HelloWordHandler)
+	apiRouter.With(middlewares.Auth).Get("/", s.HelloWorldHandler)
 
 	apiRouter.With(middlewares.Auth).Post("/user/logout", s.LogoutHandler)
 

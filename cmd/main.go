@@ -20,7 +20,11 @@ func main() {
 		return
 	}
 
-	customServer := server.Create()
+	customServer, err := server.NewCustomServer()
+	if err != nil {
+		logger.Instance.Errorf("Ошибка инициализации customServer: %v", err)
+		return
+	}
 
 	stopSignal := make(chan os.Signal, 1)
 	signal.Notify(stopSignal, syscall.SIGINT, syscall.SIGTERM)
@@ -30,13 +34,4 @@ func main() {
 	<-stopSignal
 
 	customServer.ShutDown()
-
-	// РАБОТА ЗАПРОСОВ В LLM
-	//res, err := llm.GetKeywords("Как работать с Images в Next.js?")
-	//if err != nil {
-	//	logger.Instance.Warnw("send gpt request failed", "error", err)
-	//}
-	//
-	//logger.Instance.Info(res)
-	//logger.Instance.Warnw("send gpt request success", "result", res)
 }

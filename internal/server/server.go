@@ -18,12 +18,18 @@ type CustomServer struct {
 	services *services.Services
 }
 
-func NewCustomServer(router *chi.Mux) *CustomServer {
+func NewCustomServer() (*CustomServer, error) {
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+
+	router.Use(logging.LoggingHandlers)
+
 	config := _config.GetConfig()
 
 	database, err := db.ConnectToDB(config.PostgresConnect)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	store := storage.NewSQLStorage(database)
@@ -39,18 +45,7 @@ func NewCustomServer(router *chi.Mux) *CustomServer {
 
 	router.Mount("/api", apiRouter)
 
-	return s
-}
-
-func Create() *CustomServer {
-	router := chi.NewRouter()
-
-	router.Use(middleware.RequestID)
-
-	router.Use(logging.LoggingHandlers)
-
-	server := NewCustomServer(router)
-	return server
+	return s, nil
 }
 
 func (s *CustomServer) Start() {

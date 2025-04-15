@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-func (s *CustomServer) HelloWordHandler(res http.ResponseWriter, req *http.Request) {
+func (s *CustomServer) HelloWorldHandler(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
 	res.Write([]byte("<h1>Hello World</h1>"))
 }

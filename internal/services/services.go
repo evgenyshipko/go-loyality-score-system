@@ -5,6 +5,9 @@ import (
 	"github.com/evgenyshipko/go-rag-chat-helper/internal/storage"
 )
 
+type ServiceNeedsStorage interface {
+}
+
 type Services struct {
 	Auth     *AuthService
 	Document *DocumentService
