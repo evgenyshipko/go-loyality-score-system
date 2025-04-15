@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	config2 "github.com/evgenyshipko/go-rag-chat-helper/internal/config"
 	c "github.com/evgenyshipko/go-rag-chat-helper/internal/const"
 	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
 	"github.com/go-resty/resty/v2"
@@ -10,10 +11,12 @@ import (
 	"strings"
 )
 
-type LlmService struct{}
+type LlmService struct {
+	config *config2.Config
+}
 
-func NewLlmService() *LlmService {
-	return &LlmService{}
+func NewLlmService(config *config2.Config) *LlmService {
+	return &LlmService{config: config}
 }
 
 func (s *LlmService) GetKeywords(text string) ([]string, error) {
@@ -26,7 +29,7 @@ func (s *LlmService) GetKeywords(text string) ([]string, error) {
 	messages = append(messages, systemMessage)
 	messages = append(messages, message)
 
-	res, err := sendGptRequest(GptRequestBody{Messages: messages, ChatId: 2660})
+	res, err := s.sendGptRequest(GptRequestBody{Messages: messages, ChatId: 2660})
 	if err != nil {
 		logger.Instance.Warnw("send gpt request failed", "error", err)
 		return []string{}, err
@@ -57,7 +60,7 @@ func (s *LlmService) GetAnswerBasedOnDocument(query string, document string) (st
 	messages = append(messages, systemMessage)
 	messages = append(messages, message)
 
-	res, err := sendGptRequest(GptRequestBody{Messages: messages, ChatId: 2660})
+	res, err := s.sendGptRequest(GptRequestBody{Messages: messages, ChatId: 2660})
 	if err != nil {
 		logger.Instance.Warnw("send gpt request failed", "error", err)
 		return "", err
@@ -93,14 +96,10 @@ type GptResponse struct {
 	Text string `json:"text"`
 }
 
-func sendGptRequest(body GptRequestBody) (*resty.Response, error) {
-	url := os.Getenv("LLM_REQUEST_LINK")
-
+func (s *LlmService) sendGptRequest(body GptRequestBody) (*resty.Response, error) {
 	var headers map[string]string
 
-	logger.Instance.Info(os.Getenv("LLM_REQUEST_HEADERS"))
-
-	err := json.Unmarshal([]byte(os.Getenv("LLM_REQUEST_HEADERS")), &headers)
+	err := json.Unmarshal([]byte(s.config.LlmHeaders), &headers)
 	if err != nil {
 		logger.Instance.Warnw("Ошибка доставания заголовков из переменной LLM_REQUEST_HEADERS", err)
 		return nil, err
@@ -111,5 +110,5 @@ func sendGptRequest(body GptRequestBody) (*resty.Response, error) {
 	return resty.New().R().
 		SetBody(body).
 		SetHeaders(headers).
-		Post(url)
+		Post(s.config.LlmRequestLink)
 }

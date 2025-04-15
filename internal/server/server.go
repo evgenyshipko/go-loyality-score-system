@@ -1,6 +1,7 @@
 package server
 
 import (
+	_config "github.com/evgenyshipko/go-rag-chat-helper/internal/config"
 	"github.com/evgenyshipko/go-rag-chat-helper/internal/db"
 	"github.com/evgenyshipko/go-rag-chat-helper/internal/httpserver"
 	"github.com/evgenyshipko/go-rag-chat-helper/internal/logger"
@@ -9,7 +10,6 @@ import (
 	"github.com/evgenyshipko/go-rag-chat-helper/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"os"
 )
 
 type CustomServer struct {
@@ -19,16 +19,18 @@ type CustomServer struct {
 }
 
 func NewCustomServer(router *chi.Mux) *CustomServer {
-	database, err := db.ConnectToDB(os.Getenv("POSTGRES_CONNECT"))
+	config := _config.GetConfig()
+
+	database, err := db.ConnectToDB(config.PostgresConnect)
 	if err != nil {
 		panic(err)
 	}
 
 	store := storage.NewSQLStorage(database)
-	service := services.NewServices(store)
+	service := services.NewServices(store, &config)
 
 	s := &CustomServer{
-		server:   httpserver.NewHTTPServer(os.Getenv("SERVER_HOST"), router),
+		server:   httpserver.NewHTTPServer(config.ServerHost, router),
 		storage:  store,
 		services: service,
 	}

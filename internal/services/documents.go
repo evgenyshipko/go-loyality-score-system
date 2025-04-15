@@ -58,8 +58,8 @@ func (service *DocumentService) SearchDocument(keywords []string) (string, error
 	return res, nil
 }
 
-func splitDocumentIntoChunks(document string) []c.DocumentChunk {
-	var chunks []c.DocumentChunk
+func splitDocumentIntoChunks(document string) []constants.DocumentChunk {
+	var chunks []constants.DocumentChunk
 	words := strings.Fields(document)
 	var currentChunk []string
 	currentSize := 0
@@ -68,7 +68,7 @@ func splitDocumentIntoChunks(document string) []c.DocumentChunk {
 	for _, word := range words {
 		wordLength := utf8.RuneCountInString(word)
 		if currentSize+wordLength+len(currentChunk) > ChunkSize {
-			chunks = append(chunks, c.DocumentChunk{
+			chunks = append(chunks, constants.DocumentChunk{
 				Text:       strings.Join(currentChunk, " "),
 				ChunkIndex: chunkIndex,
 			})
@@ -82,7 +82,7 @@ func splitDocumentIntoChunks(document string) []c.DocumentChunk {
 	}
 
 	if len(currentChunk) > 0 {
-		chunks = append(chunks, c.DocumentChunk{
+		chunks = append(chunks, constants.DocumentChunk{
 			Text:       strings.Join(currentChunk, " "),
 			ChunkIndex: chunkIndex,
 		})
